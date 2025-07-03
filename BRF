@@ -1,1 +1,73 @@
+import numpy as np
+import matplotlib.pyplot as plt
+import random
 
+# إعداد الزمن والمعاملات
+t = np.linspace(0, 1, 1000)
+alpha = 0.6
+beta = 0.4
+
+# دوال الموجات والعمليات
+def factor_wave(guess):
+    freq = np.log(float(guess))  # تحويل إلى float قبل log
+    amp = 1.0
+    phase = 0
+    wave = amp * np.sin(2 * np.pi * freq * t + phase)
+    noise = np.random.normal(0, 0.1, size=t.shape)
+    return wave + noise
+
+def wave_xor(a, b):
+    return np.abs(a - b)
+
+def enhance(signal):
+    return alpha * signal + beta * np.abs(signal)
+
+def stability_score(signal):
+    return 1 / (1 + np.std(np.gradient(signal)))
+
+# 🧮 توليد عدد RSA رمزي كبير جدًا
+p = random.randint(10**48, 10**49)
+q = random.randint(10**48, 10**49)
+N = p * q
+print(f"🔐 Simulated RSA-like Number (N): {N}")
+
+# 🧪 توليد تخمينات تشمل العاملين الحقيقيين
+guesses = [p, q] + [random.randint(10**48, 10**49) for _ in range(98)]
+
+# محاكاة التراكب الموجي
+scores = []
+signals = []
+
+for g in guesses:
+    if N % g != 0:
+        continue  # فقط نحاكي العوامل الحقيقية
+    pair = N // g
+    w1 = factor_wave(g)
+    w2 = factor_wave(pair)
+    combined = wave_xor(w1, w2)
+    enhanced = enhance(combined)
+    score = stability_score(enhanced)
+    scores.append((g, pair, score))
+    signals.append((g, pair, enhanced))
+
+# عرض النتائج
+if scores:
+    best = max(scores, key=lambda x: x[2])
+    print(f"🔓 Best Factorization Found: {best[0]} × {best[1]} = {N}")
+    print(f"📈 Stability Score: {best[2]:.6f}")
+
+    # رسم الإشارة الأفضل
+    for g, p, sig in signals:
+        if (g, p) == (best[0], best[1]) or (p, g) == (best[0], best[1]):
+            plt.figure(figsize=(10, 4))
+            plt.plot(t, sig, label=f'{g} × {p}', color='purple')
+            plt.title(f'Enhanced Signal for Factors of N')
+            plt.xlabel('Time')
+            plt.ylabel('Amplitude')
+            plt.grid(True)
+            plt.legend()
+            plt.tight_layout()
+            plt.show()
+            break
+else:
+    print("🚫 No valid factors found in simulated range.")
